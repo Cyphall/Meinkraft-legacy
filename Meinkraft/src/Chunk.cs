@@ -14,10 +14,11 @@ namespace Meinkraft
 		private int _verticesCount;
 	
 		private uint _verticesBufferID;
-		private uint _uvBufferID;
+		private uint _uvsBufferID;
+		private uint _normalsBufferID;
 	
 		private uint _vaoID;
-		
+
 		public Chunk(ivec2 chunkPos)
 		{
 			pos = chunkPos;
@@ -28,7 +29,8 @@ namespace Meinkraft
 			_model[3, 2] = pos.y * 16;
 			
 			_verticesBufferID = Gl.GenBuffer();
-			_uvBufferID = Gl.GenBuffer();
+			_uvsBufferID = Gl.GenBuffer();
+			_normalsBufferID = Gl.GenBuffer();
 
 			_vaoID = Gl.GenVertexArray();
 	
@@ -39,7 +41,8 @@ namespace Meinkraft
 		{
 			Gl.DeleteVertexArrays(_vaoID);
 			Gl.DeleteBuffers(_verticesBufferID);
-			Gl.DeleteBuffers(_uvBufferID);
+			Gl.DeleteBuffers(_uvsBufferID);
+			Gl.DeleteBuffers(_normalsBufferID);
 		}
 
 		public void render(mat4 viewProjection, uint shaderID)
@@ -49,7 +52,7 @@ namespace Meinkraft
 			Gl.UniformMatrix4f(Gl.GetUniformLocation(shaderID, "modelViewProjection"), 1, false, mvp);
 			
 			Gl.BindVertexArray(_vaoID);
-				Gl.DrawArrays(PrimitiveType.Quads, 0, _verticesCount);
+				Gl.DrawArrays(PrimitiveType.Triangles, 0, _verticesCount);
 			Gl.BindVertexArray(0);
 		}
 
@@ -57,6 +60,7 @@ namespace Meinkraft
 		{
 			List<gvec3<byte>> vertices = new List<gvec3<byte>>();
 			List<vec2> uvs = new List<vec2>();
+			List<gvec3<sbyte>> normals = new List<gvec3<sbyte>>();
 	
 			int vCount = 0;
 	
@@ -73,86 +77,157 @@ namespace Meinkraft
 						// x + 1
 						if ((x + 1 < 16 && _blocks[y + z * 255 + (x+1) * 4080] == BlockType.AIR) || x + 1 == 16)
 						{
-							vCount += 4;
+							vCount += 6;
 							vertices.Add(new gvec3<byte>((byte)(x + 1), y, (byte)(z + 1)));
 							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), (byte)(z + 1)));
-							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), z));
 							vertices.Add(new gvec3<byte>((byte)(x + 1), y, z));
+							vertices.Add(new gvec3<byte>((byte)(x + 1), y, z));
+							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), (byte)(z + 1)));
+							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), z));
 
 							uvs.Add(uvOffset + new vec2(0.1875f, 0.0625f));
 							uvs.Add(uvOffset + new vec2(0.1875f, 0.125f));
-							uvs.Add(uvOffset + new vec2(0.25f, 0.125f));
 							uvs.Add(uvOffset + new vec2(0.25f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.25f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.1875f, 0.125f));
+							uvs.Add(uvOffset + new vec2(0.25f, 0.125f));
+
+							gvec3<sbyte> normal = new gvec3<sbyte>(1, 0, 0);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
 						}
 						// x - 1
 						if ((x - 1 > -1 && _blocks[y + z * 255 + (x-1) * 4080] == BlockType.AIR) || x - 1 == -1)
 						{
-							vCount += 4;
+							vCount += 6;
 							vertices.Add(new gvec3<byte>(x, y, z));
 							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), z));
-							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), (byte)(z + 1)));
 							vertices.Add(new gvec3<byte>(x, y, (byte)(z + 1)));
+							vertices.Add(new gvec3<byte>(x, y, (byte)(z + 1)));
+							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), z));
+							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), (byte)(z + 1)));
 
 							uvs.Add(uvOffset + new vec2(0.0625f, 0.0625f));
 							uvs.Add(uvOffset + new vec2(0.0625f, 0.125f));
-							uvs.Add(uvOffset + new vec2(0.125f, 0.125f));
 							uvs.Add(uvOffset + new vec2(0.125f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.125f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.0625f, 0.125f));
+							uvs.Add(uvOffset + new vec2(0.125f, 0.125f));
+							
+							gvec3<sbyte> normal = new gvec3<sbyte>(-1, 0, 0);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
 						}
 						// y + 1
 						if ((y + 1 < 255 && _blocks[(y+1) + z * 255 + x * 4080] == BlockType.AIR) || y + 1 == 255)
 						{
-							vCount += 4;
+							vCount += 6;
 							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), z));
 							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), z));
-							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), (byte)(z + 1)));
 							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), (byte)(z + 1)));
+							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), (byte)(z + 1)));
+							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), z));
+							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), (byte)(z + 1)));
 
 							uvs.Add(uvOffset + new vec2(0.0625f, 0.125f));
 							uvs.Add(uvOffset + new vec2(0.0625f, 0.1875f));
-							uvs.Add(uvOffset + new vec2(0.125f, 0.1875f));
 							uvs.Add(uvOffset + new vec2(0.125f, 0.125f));
+							uvs.Add(uvOffset + new vec2(0.125f, 0.125f));
+							uvs.Add(uvOffset + new vec2(0.0625f, 0.1875f));
+							uvs.Add(uvOffset + new vec2(0.125f, 0.1875f));
+							
+							gvec3<sbyte> normal = new gvec3<sbyte>(0, 1, 0);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
 						}
 						// y - 1
 						if ((y - 1 > -1 && _blocks[(y-1) + z * 255 + x * 4080] == BlockType.AIR) || y - 1 == -1)
 						{
-							vCount += 4;
+							vCount += 6;
 							vertices.Add(new gvec3<byte>((byte)(x + 1), y, z));
 							vertices.Add(new gvec3<byte>(x, y, z));
-							vertices.Add(new gvec3<byte>(x, y, (byte)(z + 1)));
 							vertices.Add(new gvec3<byte>((byte)(x + 1), y, (byte)(z + 1)));
+							vertices.Add(new gvec3<byte>((byte)(x + 1), y, (byte)(z + 1)));
+							vertices.Add(new gvec3<byte>(x, y, z));
+							vertices.Add(new gvec3<byte>(x, y, (byte)(z + 1)));
 
 							uvs.Add(uvOffset + new vec2(0.0625f, 0f));
 							uvs.Add(uvOffset + new vec2(0.0625f, 0.0625f));
-							uvs.Add(uvOffset + new vec2(0.125f, 0.0625f));
 							uvs.Add(uvOffset + new vec2(0.125f, 0f));
+							uvs.Add(uvOffset + new vec2(0.125f, 0f));
+							uvs.Add(uvOffset + new vec2(0.0625f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.125f, 0.0625f));
+							
+							gvec3<sbyte> normal = new gvec3<sbyte>(0, -1, 0);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
 						}
 						// z + 1
 						if ((z + 1 < 16 && _blocks[y + (z+1) * 255 + x * 4080] == BlockType.AIR) || z + 1 == 16)
 						{
-							vCount += 4;
+							vCount += 6;
 							vertices.Add(new gvec3<byte>(x, y, (byte)(z + 1)));
 							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), (byte)(z + 1)));
-							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), (byte)(z + 1)));
 							vertices.Add(new gvec3<byte>((byte)(x + 1), y, (byte)(z + 1)));
+							vertices.Add(new gvec3<byte>((byte)(x + 1), y, (byte)(z + 1)));
+							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), (byte)(z + 1)));
+							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), (byte)(z + 1)));
 
-							uvs.Add(uvOffset + new vec2(0.0f, 0.0625f));
-							uvs.Add(uvOffset + new vec2(0.0f, 0.125f));
-							uvs.Add(uvOffset + new vec2(0.0625f, 0.125f));
-							uvs.Add(uvOffset + new vec2(0.0625f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.125f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.125f, 0.125f));
+							uvs.Add(uvOffset + new vec2(0.1875f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.1875f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.125f, 0.125f));
+							uvs.Add(uvOffset + new vec2(0.1875f, 0.125f));
+							
+							gvec3<sbyte> normal = new gvec3<sbyte>(0, 0, 1);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
 						}
 						// z - 1
 						if ((z - 1 > -1 && _blocks[y + (z-1) * 255 + x * 4080] == BlockType.AIR) || z - 1 == -1)
 						{
-							vCount += 4;
+							vCount += 6;
 							vertices.Add(new gvec3<byte>((byte)(x + 1), y, z));
 							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), z));
-							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), z));
 							vertices.Add(new gvec3<byte>(x, y, z));
+							vertices.Add(new gvec3<byte>(x, y, z));
+							vertices.Add(new gvec3<byte>((byte)(x + 1), (byte)(y + 1), z));
+							vertices.Add(new gvec3<byte>(x, (byte)(y + 1), z));
 
-							uvs.Add(uvOffset + new vec2(0.125f, 0.0625f));
-							uvs.Add(uvOffset + new vec2(0.125f, 0.125f));
-							uvs.Add(uvOffset + new vec2(0.1875f, 0.125f));
-							uvs.Add(uvOffset + new vec2(0.1875f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.0f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.0f, 0.125f));
+							uvs.Add(uvOffset + new vec2(0.0625f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.0625f, 0.0625f));
+							uvs.Add(uvOffset + new vec2(0.0f, 0.125f));
+							uvs.Add(uvOffset + new vec2(0.0625f, 0.125f));
+							
+							gvec3<sbyte> normal = new gvec3<sbyte>(0, 0, -1);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
+							normals.Add(normal);
 						}
 					}
 				}
@@ -163,8 +238,11 @@ namespace Meinkraft
 			Gl.BindBuffer(BufferTarget.ArrayBuffer, _verticesBufferID);
 				Gl.BufferData(BufferTarget.ArrayBuffer, (uint)vertices.Count * 3, vertices.ToArray(), BufferUsage.StaticDraw);
 	
-			Gl.BindBuffer(BufferTarget.ArrayBuffer, _uvBufferID);
+			Gl.BindBuffer(BufferTarget.ArrayBuffer, _uvsBufferID);
 				Gl.BufferData(BufferTarget.ArrayBuffer, (uint)uvs.Count * sizeof(float) * 2, uvs.ToArray(), BufferUsage.StaticDraw);
+				
+			Gl.BindBuffer(BufferTarget.ArrayBuffer, _normalsBufferID);
+				Gl.BufferData(BufferTarget.ArrayBuffer, (uint)normals.Count * 3, normals.ToArray(), BufferUsage.StaticDraw);
 	
 			Gl.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
@@ -175,9 +253,13 @@ namespace Meinkraft
 				Gl.VertexAttribIPointer(0, 3, VertexAttribType.UnsignedByte, 0, IntPtr.Zero);
 				Gl.EnableVertexAttribArray(0);
 		
-				Gl.BindBuffer(BufferTarget.ArrayBuffer, _uvBufferID);
+				Gl.BindBuffer(BufferTarget.ArrayBuffer, _uvsBufferID);
 				Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 0, IntPtr.Zero);
 				Gl.EnableVertexAttribArray(1);
+				
+				Gl.BindBuffer(BufferTarget.ArrayBuffer, _normalsBufferID);
+				Gl.VertexAttribIPointer(2, 3, VertexAttribType.Byte, 0, IntPtr.Zero);
+				Gl.EnableVertexAttribArray(2);
 	
 			Gl.BindVertexArray(0);
 		}

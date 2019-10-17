@@ -25,6 +25,10 @@ namespace Meinkraft
 			
 
 			Gl.Enable(EnableCap.DepthTest);
+			
+			Gl.Enable(EnableCap.CullFace);
+			Gl.FrontFace(FrontFaceDirection.Cw);
+			
 			Gl.ClearColor(0x87 / 255.0f, 0xCE / 255.0f, 0xFA / 255.0f, 0xFF / 255.0f);
 			
 			World world = new World(window);

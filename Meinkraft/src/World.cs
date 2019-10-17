@@ -18,6 +18,8 @@ namespace Meinkraft
 		
 		private Dictionary<ivec2, Chunk> _chunks = new Dictionary<ivec2, Chunk>();
 		
+		private bool _shaderShowNormals = false;
+		
 		public World(Window window)
 		{
 			_window = window;
@@ -50,6 +52,9 @@ namespace Meinkraft
 			{
 				if (_chunkTexture.bind())
 				{
+					Gl.Uniform1i(Gl.GetUniformLocation(_chunkShader.programID, "showNormals"), 1, _shaderShowNormals ? 1 : 0);
+					Gl.Uniform3f(Gl.GetUniformLocation(_chunkShader.programID, "cameraPos"), 1, _camera.position);
+					
 					foreach (KeyValuePair<ivec2, Chunk> keyValuePair in _chunks)
 					{
 						keyValuePair.Value.render(viewProjection, _chunkShader.programID);

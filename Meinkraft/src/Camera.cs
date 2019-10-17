@@ -11,7 +11,7 @@ namespace Meinkraft
 
 		private mat4 _projection;
 
-		public vec3 position { get; private set; } = new vec3(8, 150, 8);
+		public vec3 position { get; private set; } = new vec3(8, 200, 8);
 		private vec3 _orientation = vec3.Zero;
 		private vec3 _deplacementLateral = vec3.Zero;
 		private vec3 _targetPoint = vec3.Zero;
