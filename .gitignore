@@ -1,0 +1,8 @@
+.vscode
+.vs/
+.idea
+
+Meinkraft/bin/Release/netcoreapp2.1/*
+!Meinkraft/bin/Release/netcoreapp2.1/resources
+
+Meinkraft/obj/
