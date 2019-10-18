@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -79,10 +78,12 @@ namespace Meinkraft
 					Console.Error.WriteLine("A chunk has been overriden without prior deletion");
 				return;
 			}
-		
+			
 			Chunk chunk = new Chunk(chunkPos);
-		
+			
 			_chunks.Add(chunkPos, chunk);
+			
+			chunk.initialize();
 		}
 		
 		public void placeBlock(ivec3 blockPos, byte blockType)

@@ -16,6 +16,14 @@ void main()
 	}
 	else
 	{
-		out_Color = texture(tex, vec2(frag_UV.x, 1.0-frag_UV.y));
+		vec4 mask = vec4(0.7);
+		
+		if (frag_Normals.y > 0)
+			mask = vec4(1);
+		else if(frag_Normals.y < 0)
+			mask = vec4(0.4);
+		mask.w = 1.0;
+		
+		out_Color = texture(tex, vec2(frag_UV.x, 1.0-frag_UV.y)) * mask;
 	}
 }

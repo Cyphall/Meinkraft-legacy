@@ -19,11 +19,11 @@ namespace Meinkraft
 	
 		private uint _vaoID;
 
+		public bool initialized { get; private set; } = false;
+
 		public Chunk(ivec2 chunkPos)
 		{
 			pos = chunkPos;
-
-			_blocks = WorldGeneration.generateChunkBlocks(chunkPos, WorldGeneration.mountains);
 
 			_model[3, 0] = pos.x * 16;
 			_model[3, 2] = pos.y * 16;
@@ -33,8 +33,24 @@ namespace Meinkraft
 			_normalsBufferID = Gl.GenBuffer();
 
 			_vaoID = Gl.GenVertexArray();
+			
+			Gl.BindVertexArray(_vaoID);
 	
-			rebuildMesh();
+				Gl.BindBuffer(BufferTarget.ArrayBuffer, _verticesBufferID);
+				Gl.VertexAttribIPointer(0, 3, VertexAttribType.UnsignedByte, 0, IntPtr.Zero);
+				Gl.EnableVertexAttribArray(0);
+			
+				Gl.BindBuffer(BufferTarget.ArrayBuffer, _uvsBufferID);
+				Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 0, IntPtr.Zero);
+				Gl.EnableVertexAttribArray(1);
+					
+				Gl.BindBuffer(BufferTarget.ArrayBuffer, _normalsBufferID);
+				Gl.VertexAttribIPointer(2, 3, VertexAttribType.Byte, 0, IntPtr.Zero);
+				Gl.EnableVertexAttribArray(2);
+	
+			Gl.BindVertexArray(0);
+	
+//			rebuildMesh();
 		}
 		
 		public void Dispose()
@@ -47,6 +63,8 @@ namespace Meinkraft
 
 		public void render(mat4 viewProjection, uint shaderID)
 		{
+			if (!initialized) return;
+			
 			mat4 mvp = viewProjection * _model;
 
 			Gl.UniformMatrix4f(Gl.GetUniformLocation(shaderID, "modelViewProjection"), 1, false, mvp);
@@ -54,6 +72,15 @@ namespace Meinkraft
 			Gl.BindVertexArray(_vaoID);
 				Gl.DrawArrays(PrimitiveType.Triangles, 0, _verticesCount);
 			Gl.BindVertexArray(0);
+		}
+
+		public void initialize()
+		{
+			_blocks = WorldGeneration.generateChunkBlocks(pos, WorldGeneration.mountains);
+			
+			rebuildMesh();
+
+			initialized = true;
 		}
 
 		private void rebuildMesh()
@@ -119,6 +146,7 @@ namespace Meinkraft
 							uvs.Add(uvOffset + new vec2(0.125f, 0.125f));
 							
 							gvec3<sbyte> normal = new gvec3<sbyte>(-1, 0, 0);
+							normals.Add(normal);
 							normals.Add(normal);
 							normals.Add(normal);
 							normals.Add(normal);
@@ -234,7 +262,7 @@ namespace Meinkraft
 			}
 	
 			_verticesCount = vCount;
-	
+			
 			Gl.BindBuffer(BufferTarget.ArrayBuffer, _verticesBufferID);
 				Gl.BufferData(BufferTarget.ArrayBuffer, (uint)vertices.Count * 3, vertices.ToArray(), BufferUsage.StaticDraw);
 	
@@ -245,23 +273,6 @@ namespace Meinkraft
 				Gl.BufferData(BufferTarget.ArrayBuffer, (uint)normals.Count * 3, normals.ToArray(), BufferUsage.StaticDraw);
 	
 			Gl.BindBuffer(BufferTarget.ArrayBuffer, 0);
-
-
-			Gl.BindVertexArray(_vaoID);
-	
-				Gl.BindBuffer(BufferTarget.ArrayBuffer, _verticesBufferID);
-				Gl.VertexAttribIPointer(0, 3, VertexAttribType.UnsignedByte, 0, IntPtr.Zero);
-				Gl.EnableVertexAttribArray(0);
-		
-				Gl.BindBuffer(BufferTarget.ArrayBuffer, _uvsBufferID);
-				Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 0, IntPtr.Zero);
-				Gl.EnableVertexAttribArray(1);
-				
-				Gl.BindBuffer(BufferTarget.ArrayBuffer, _normalsBufferID);
-				Gl.VertexAttribIPointer(2, 3, VertexAttribType.Byte, 0, IntPtr.Zero);
-				Gl.EnableVertexAttribArray(2);
-	
-			Gl.BindVertexArray(0);
 		}
 		
 		private void setBlock(ivec3 blockPos, byte blockType)

@@ -13,7 +13,7 @@ namespace Meinkraft
 
 		public vec3 position { get; private set; } = new vec3(8, 200, 8);
 		private vec3 _orientation = vec3.Zero;
-		private vec3 _deplacementLateral = vec3.Zero;
+		private vec3 _sideOrientation = vec3.Zero;
 		private vec3 _targetPoint = vec3.Zero;
 
 		private Window _window;
@@ -24,6 +24,8 @@ namespace Meinkraft
 			_window = window;
 			_projection = mat4.Perspective(glm.Radians(82.0f), (float)window.Size.X / window.Size.Y, 0.01f, 1000.0f);
 			_winCenter = new Vector2i((int)window.Size.X / 2, (int)window.Size.Y / 2);
+			
+			setRotation(0, 0);
 		}
 		
 		private void setRotation(float vertical, float horizontal)
@@ -40,7 +42,7 @@ namespace Meinkraft
 			_orientation.y = glm.Sin(phiRadian);
 			_orientation.z = glm.Cos(phiRadian) * glm.Cos(thetaRadian);
 	
-			_deplacementLateral = glm.Cross(new vec3(0, 1, 0), _orientation).Normalized;
+			_sideOrientation = glm.Cross(new vec3(0, 1, 0), _orientation).Normalized;
 
 			_targetPoint = position + _orientation;
 		}
@@ -65,22 +67,22 @@ namespace Meinkraft
 	
 			if(Keyboard.IsKeyPressed(Keyboard.Key.Z))
 			{
-				position = position + _orientation * 0.05f * ratio;
+				position += _orientation * 0.05f * ratio;
 				_targetPoint = position + _orientation;
 			}
 			if(Keyboard.IsKeyPressed(Keyboard.Key.S))
 			{
-				position = position - _orientation * 0.05f * ratio;
+				position -= _orientation * 0.05f * ratio;
 				_targetPoint = position + _orientation;
 			}
 			if(Keyboard.IsKeyPressed(Keyboard.Key.Q))
 			{
-				position = position + _deplacementLateral * 0.05f * ratio;
+				position += _sideOrientation * 0.05f * ratio;
 				_targetPoint = position + _orientation;
 			}
 			if(Keyboard.IsKeyPressed(Keyboard.Key.D))
 			{
-				position = position - _deplacementLateral * 0.05f * ratio;
+				position -= _sideOrientation * 0.05f * ratio;
 				_targetPoint = position + _orientation;
 			}
 	
