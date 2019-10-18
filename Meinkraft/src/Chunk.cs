@@ -49,8 +49,6 @@ namespace Meinkraft
 				Gl.EnableVertexAttribArray(2);
 	
 			Gl.BindVertexArray(0);
-	
-//			rebuildMesh();
 		}
 		
 		public void Dispose()
