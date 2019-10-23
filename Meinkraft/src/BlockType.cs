@@ -5,7 +5,7 @@ namespace Meinkraft
 {
 	public class BlockType
 	{
-		private static Dictionary<byte, BlockType> types;
+		private static Dictionary<byte, BlockType> _types;
 
 		public const byte AIR = 0;
 		public const byte STONE = 1;
@@ -16,7 +16,7 @@ namespace Meinkraft
 
 		static BlockType()
 		{
-			types = new Dictionary<byte, BlockType>
+			_types = new Dictionary<byte, BlockType>
 			{
 				{AIR, null},
 				{STONE, new BlockType(new vec2(0.75f, 0f))},
@@ -29,10 +29,10 @@ namespace Meinkraft
 
 		public static BlockType get(byte i)
 		{
-			return types[i];
+			return _types[i];
 		}
 
-		public vec2 uvOffset { get; private set; }
+		public vec2 uvOffset { get; }
 
 		private BlockType(vec2 uvOffset)
 		{

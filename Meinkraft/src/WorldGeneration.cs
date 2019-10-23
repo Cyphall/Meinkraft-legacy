@@ -2,21 +2,18 @@
 using GlmSharp;
 using LibNoise;
 using LibNoise.Primitive;
-using SFML.Graphics;
 
 namespace Meinkraft
 {
 	public static class WorldGeneration
 	{
 		private static SimplexPerlin _noiseGen = new SimplexPerlin(new Random().Next(), NoiseQuality.Standard);
-		public static float max = 0;
-		public static float min = 0;
 		
-		public static byte[] generateChunkBlocks(ivec2 chunkPos, Func<ivec2, BiomeParams> biome)
+		public static NativeArray<byte> generateChunkBlocks(ivec2 chunkPos, Func<ivec2, BiomeParams> biome)
 		{
 			BiomeParams biomeParams = biome(chunkPos);
 			
-			byte[] blocks = new byte[65280];
+			NativeArray<byte> blocks = new NativeArray<byte>(65280, 0);
 		
 			for (int x = 0; x < 16; x++)
 			{
@@ -118,4 +115,4 @@ public struct BiomeParams
 	
 	public int rockMin;
 	public int rockMax;
-};
+}

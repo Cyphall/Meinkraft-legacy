@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Threading;
 using OpenGL;
 using SFML.Window;
 
@@ -6,8 +6,10 @@ namespace Meinkraft
 {
 	class Program
 	{
-		static void Main(string[] args)
+		static void Main()
 		{
+			Thread.CurrentThread.Priority = ThreadPriority.Highest;
+			
 			Gl.Initialize();
 			
 			VideoMode mode = VideoMode.DesktopMode;

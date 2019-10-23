@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using GlmSharp;
 using OpenGL;
 using SFML.Window;
@@ -10,19 +12,17 @@ namespace Meinkraft
 {
 	public class World : IDisposable
 	{
-		private Window _window;
 		private Shader _chunkShader;
 		private Texture _chunkTexture;
 		private Camera _camera;
 		
 		private Dictionary<ivec2, Chunk> _chunks = new Dictionary<ivec2, Chunk>();
+		private BlockingCollection<Chunk> _applyQueue = new BlockingCollection<Chunk>(8);
 		
 		private bool _shaderShowNormals = false;
 		
 		public World(Window window)
 		{
-			_window = window;
-			
 			if (File.Exists("resources/shaders/chunk_custom.vert") && File.Exists("resources/shaders/chunk_custom.frag"))
 				_chunkShader = new Shader("chunk_custom");
 			else
@@ -83,7 +83,11 @@ namespace Meinkraft
 			
 			_chunks.Add(chunkPos, chunk);
 			
-			chunk.initialize();
+			ThreadPool.QueueUserWorkItem(_ =>
+			{
+				chunk.initialize();
+				_applyQueue.Add(chunk);
+			});
 		}
 		
 		public void placeBlock(ivec3 blockPos, byte blockType)
@@ -140,8 +144,8 @@ namespace Meinkraft
 		
 			foreach (KeyValuePair<ivec2, Chunk> keyValuePair in chunkRemoveList)
 			{
-				keyValuePair.Value.Dispose();
 				_chunks.Remove(keyValuePair.Key);
+				keyValuePair.Value.Dispose();
 			}
 			
 			for (int x = chunkWithPlayer.x ; x <= chunkWithPlayer.x + effectiveRenderDistance; x++)
@@ -158,6 +162,11 @@ namespace Meinkraft
 					createChunk(new ivec2(xSym, y), false);
 					createChunk(new ivec2(xSym, ySym), false);
 				}
+			}
+			
+			if (_applyQueue.TryTake(out Chunk chunk))
+			{
+				chunk.applyMesh();
 			}
 		}
 	}
