@@ -22,14 +22,21 @@ namespace Meinkraft
 		{
 			get
 			{
-				if (i >= size) throw new IndexOutOfRangeException();
+				if (i >= size) throw new IndexOutOfRangeException("Index is out of bounds");
+				if (i < 0) throw new IndexOutOfRangeException("Index cannot be negative");
 				return _array[i];
 			}
 			set
 			{
-				if (i >= size) throw new IndexOutOfRangeException();
+				if (i >= size) throw new IndexOutOfRangeException("Index is out of bounds");
+				if (i < 0) throw new IndexOutOfRangeException("Index cannot be negative");
 				_array[i] = value;
 			}
+		}
+		
+		public static implicit operator IntPtr(NativeArray<T> list)
+		{
+			return new IntPtr(list._array);
 		}
 		
 		public void Dispose()
