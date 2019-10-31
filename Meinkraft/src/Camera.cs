@@ -25,6 +25,7 @@ namespace Meinkraft
 			_projection = mat4.Perspective(glm.Radians(82.0f), (float)window.Size.X / window.Size.Y, 0.01f, 1000.0f);
 			_winCenter = new Vector2i((int)window.Size.X / 2, (int)window.Size.Y / 2);
 			
+			Mouse.SetPosition(_winCenter, _window);
 			setRotation(0, 0);
 		}
 		
