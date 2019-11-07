@@ -8,16 +8,16 @@ namespace Meinkraft
 	{
 		private NativeArray<byte> _blocks;
 
-		public ivec2 pos { get; }
-		private mat4 _model = mat4.Identity;
+		private readonly ivec2 _pos;
+		private readonly mat4 _model = mat4.Identity;
 
 		private int _verticesCount;
 
-		private uint _verticesBufferID;
-		private uint _uvsBufferID;
-		private uint _normalsBufferID;
+		private readonly uint _verticesBufferID;
+		private readonly uint _uvsBufferID;
+		private readonly uint _normalsBufferID;
 
-		private uint _vaoID;
+		private readonly uint _vaoID;
 
 		private NativeList<byte> _vertices; // byte3
 		private NativeList<float> _uvs; // float2
@@ -33,10 +33,10 @@ namespace Meinkraft
 
 		public Chunk(ivec2 chunkPos)
 		{
-			pos = chunkPos;
+			_pos = chunkPos;
 
-			_model[3, 0] = pos.x * 16;
-			_model[3, 2] = pos.y * 16;
+			_model[3, 0] = _pos.x * 16;
+			_model[3, 2] = _pos.y * 16;
 
 			_verticesBufferID = Gl.GenBuffer();
 			_uvsBufferID = Gl.GenBuffer();
@@ -88,7 +88,7 @@ namespace Meinkraft
 
 		public void initialize()
 		{
-			_blocks = WorldGeneration.generateChunkBlocks(pos, WorldGeneration.mountains);
+			_blocks = WorldGeneration.generateChunkBlocks(_pos, WorldGeneration.mountains);
 
 			rebuildMesh();
 		}
@@ -303,7 +303,7 @@ namespace Meinkraft
 
 		private void setBlock(ivec3 blockPos, byte blockType)
 		{
-			if (pos.y < 0 || pos.y > 255)
+			if (_pos.y < 0 || _pos.y > 255)
 			{
 				Console.Error.WriteLine("Cannot place a block bellow height 0 or above height 255");
 				return;
