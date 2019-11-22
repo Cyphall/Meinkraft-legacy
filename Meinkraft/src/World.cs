@@ -1,78 +1,41 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using GlmSharp;
-using OpenGL;
 using SFML.Window;
 
 namespace Meinkraft
 {
 	public class World : IDisposable
 	{
-		private Shader _chunkShader;
-		private Texture _chunkTexture;
-		private Camera _camera;
+		private readonly CameraManager _cameras = new CameraManager();
 		
-		private Dictionary<ivec2, Chunk> _chunks = new Dictionary<ivec2, Chunk>();
-		private BlockingCollection<Chunk> _applyQueue = new BlockingCollection<Chunk>(8);
-		
-		private bool _shaderShowNormals = false;
-		
+		public Dictionary<ivec2, Chunk> chunks { get; } = new Dictionary<ivec2, Chunk>();
+		private readonly BlockingCollection<Chunk> _applyQueue = new BlockingCollection<Chunk>(8);
+
 		public World(Window window)
 		{
-			if (File.Exists("resources/shaders/chunk_custom.vert") && File.Exists("resources/shaders/chunk_custom.frag"))
-				_chunkShader = new Shader("chunk_custom");
-			else
-				_chunkShader = new Shader("chunk");
-			
-			_chunkTexture = new Texture("Block_Texture");
-			_camera = new Camera(window);
+			_cameras.add("rasterisation", new RasterisationCamera(window, this));
+		}
+
+		public void render()
+		{
+			_cameras.current.render();
 		}
 
 		public void Dispose()
 		{
-			_chunkShader.Dispose();
-			_chunkTexture.Dispose();
-			
-			foreach (KeyValuePair<ivec2, Chunk> keyValuePair in _chunks)
+			foreach (KeyValuePair<ivec2, Chunk> keyValuePair in chunks)
 			{
 				keyValuePair.Value.Dispose();
 			}
 		}
 
-		public void render()
-		{
-			mat4 viewProjection = _camera.getViewProjection();
-			
-			if (_chunkShader.bind())
-			{
-				if (_chunkTexture.bind())
-				{
-					Gl.Uniform1i(Gl.GetUniformLocation(_chunkShader.programID, "showNormals"), 1, _shaderShowNormals ? 1 : 0);
-					Gl.Uniform3f(Gl.GetUniformLocation(_chunkShader.programID, "cameraPos"), 1, _camera.position);
-					
-					foreach (KeyValuePair<ivec2, Chunk> keyValuePair in _chunks)
-					{
-						keyValuePair.Value.render(viewProjection, _chunkShader.programID);
-					}
-				}
-				_chunkTexture.unbind();
-			}
-			_chunkTexture.unbind();
-			
-			ErrorCode err;
-			while((err = Gl.GetError()) != ErrorCode.NoError)
-			{
-				Console.Error.WriteLine(err);
-			}
-		}
-
 		private void createChunk(ivec2 chunkPos, bool overrideAlert = true)
 		{
-			if (_chunks.ContainsKey(chunkPos))
+			if (chunks.ContainsKey(chunkPos))
 			{
 				if (overrideAlert)
 					Console.Error.WriteLine("A chunk has been overriden without prior deletion");
@@ -81,7 +44,7 @@ namespace Meinkraft
 			
 			Chunk chunk = new Chunk(chunkPos);
 			
-			_chunks.Add(chunkPos, chunk);
+			chunks.Add(chunkPos, chunk);
 			
 			ThreadPool.QueueUserWorkItem(_ =>
 			{
@@ -94,13 +57,13 @@ namespace Meinkraft
 		{
 			ivec2 chunkPos = chunkPosFromBlockPos(blockPos);
 
-			if (!_chunks.ContainsKey(chunkPos))
+			if (!chunks.ContainsKey(chunkPos))
 			{
 				Console.Error.WriteLine("Chunk where block is placed doesn't exists");
 				return;
 			}
 
-			_chunks[chunkPos].placeBlock(localBlockPosFromBlockPos(blockPos), blockType);
+			chunks[chunkPos].placeBlock(localBlockPosFromBlockPos(blockPos), blockType);
 		}
 
 		private static ivec2 chunkPosFromBlockPos(ivec3 blockPos)
@@ -136,15 +99,17 @@ namespace Meinkraft
 		
 		public void update()
 		{
-			float effectiveRenderDistance = 8 - 0.1f;
-		
-			ivec2 chunkWithPlayer = chunkPosFromPlayerPos(_camera.position);
+			_cameras.current.update();
 
-			KeyValuePair<ivec2, Chunk>[] chunkRemoveList = _chunks.Where(pair => ivec2.Distance(pair.Key, chunkWithPlayer) > effectiveRenderDistance).ToArray();
+			ivec2 chunkWithPlayer = chunkPosFromPlayerPos(_cameras.current.position);
+
+			float effectiveRenderDistance = 8 - 0.1f;
+			
+			KeyValuePair<ivec2, Chunk>[] chunkRemoveList = chunks.Where(pair => ivec2.Distance(pair.Key, chunkWithPlayer) > effectiveRenderDistance).ToArray();
 		
 			foreach (KeyValuePair<ivec2, Chunk> keyValuePair in chunkRemoveList)
 			{
-				_chunks.Remove(keyValuePair.Key);
+				chunks.Remove(keyValuePair.Key);
 				keyValuePair.Value.Dispose();
 			}
 			
