@@ -1,6 +1,6 @@
-﻿using GlmSharp;
-using SFML.System;
-using SFML.Window;
+﻿using System;
+using GLFW;
+using GlmSharp;
 
 namespace Meinkraft
 {
@@ -14,15 +14,17 @@ namespace Meinkraft
 		private vec3 _sideOrientation = vec3.Zero;
 
 		private readonly Window _window;
-		private readonly Vector2i _winCenter;
+		private readonly ivec2 _winCenter;
 
 		protected Camera(Window window)
 		{
 			_window = window;
-
-			_winCenter = new Vector2i((int) window.Size.X / 2, (int) window.Size.Y / 2);
-
-			Mouse.SetPosition(_winCenter, _window);
+			
+			_winCenter = new ivec2();
+			Glfw.GetWindowSize(_window, out _winCenter.x, out _winCenter.y);
+			
+			Glfw.SetCursorPosition(_window, _winCenter.x, _winCenter.y);
+			
 			setRotation(0, 0);
 		}
 
@@ -52,42 +54,44 @@ namespace Meinkraft
 		{
 			float ratio = 1.0f;
 
-			if (Keyboard.IsKeyPressed(Keyboard.Key.LControl))
+			if (Glfw.GetKey(_window, Keys.LeftControl) == InputState.Press)
 			{
 				ratio = 0.1f;
 			}
 
-			if (Keyboard.IsKeyPressed(Keyboard.Key.LShift))
+			if (Glfw.GetKey(_window, Keys.LeftShift) == InputState.Press)
 			{
 				ratio = 2f;
 			}
 
-			if (Keyboard.IsKeyPressed(Keyboard.Key.Z))
+			if (Glfw.GetKey(_window, Keys.W) == InputState.Press)
 			{
 				position += orientation * 0.05f * ratio;
 			}
 
-			if (Keyboard.IsKeyPressed(Keyboard.Key.S))
+			if (Glfw.GetKey(_window, Keys.S) == InputState.Press)
 			{
 				position -= orientation * 0.05f * ratio;
 			}
 
-			if (Keyboard.IsKeyPressed(Keyboard.Key.Q))
+			if (Glfw.GetKey(_window, Keys.A) == InputState.Press)
 			{
 				position += _sideOrientation * 0.05f * ratio;
 			}
 
-			if (Keyboard.IsKeyPressed(Keyboard.Key.D))
+			if (Glfw.GetKey(_window, Keys.D) == InputState.Press)
 			{
 				position -= _sideOrientation * 0.05f * ratio;
 			}
+			
+			dvec2 mouseOffset = new dvec2();
+			Glfw.GetCursorPosition(_window, out mouseOffset.x, out mouseOffset.y);
+			mouseOffset -= _winCenter;
 
-			Vector2i mouseOffset = Mouse.GetPosition(_window) - _winCenter;
+			if (Math.Abs(mouseOffset.x + mouseOffset.y) < 0.01f) return;
 
-			if (mouseOffset.X + mouseOffset.Y == 0) return;
-
-			rotate(-mouseOffset.Y / 10.0f, -mouseOffset.X / 10.0f);
-			Mouse.SetPosition(_winCenter, _window);
+			rotate((float)-mouseOffset.y / 10.0f, (float)-mouseOffset.x / 10.0f);
+			Glfw.SetCursorPosition(_window, _winCenter.x, _winCenter.y);
 		}
 
 		public abstract void render();

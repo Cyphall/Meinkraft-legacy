@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using GLFW;
 using GlmSharp;
 using OpenGL;
-using SFML.Window;
+using ErrorCode = OpenGL.ErrorCode;
 
 namespace Meinkraft
 {
@@ -20,7 +21,9 @@ namespace Meinkraft
 		
 		public RasterisationCamera(Window window, World world) : base(window)
 		{
-			_projection = mat4.Perspective(glm.Radians(82.0f), (float)window.Size.X / window.Size.Y, 0.01f, 1000.0f);
+			ivec2 size = new ivec2();
+			Glfw.GetWindowSize(window, out size.x, out size.y);
+			_projection = mat4.Perspective(glm.Radians(82.0f), (float)size.x / size.y, 0.01f, 1000.0f);
 
 			_chunkShader = new Shader("chunk");
 			_chunkTexture = new Texture("Block_Texture");
@@ -51,7 +54,7 @@ namespace Meinkraft
 				}
 				_chunkTexture.unbind();
 			}
-			_chunkTexture.unbind();
+			_chunkShader.unbind();
 			
 			ErrorCode err;
 			while((err = Gl.GetError()) != ErrorCode.NoError)
