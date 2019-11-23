@@ -14,6 +14,8 @@ namespace Meinkraft
 			Gl.Initialize();
 			Glfw.Init();
 			
+			Glfw.SetErrorCallback((code, message) => Console.WriteLine(code));
+			
 			Glfw.WindowHint(Hint.Resizable, false);
 			Glfw.WindowHint(Hint.Visible, false);
 
@@ -31,24 +33,24 @@ namespace Meinkraft
 			
 			Gl.ClearColor(0x87 / 255.0f, 0xCE / 255.0f, 0xFA / 255.0f, 0xFF / 255.0f);
 			
-			World world = new World(window);
-			Glfw.SetErrorCallback((code, message) => Console.WriteLine(code));
+			ToolBox.world = new World(window);
+			
 			while(!Glfw.WindowShouldClose(window))
 			{
 				Glfw.PollEvents();
 				
 				if (Glfw.GetKey(window, Keys.Escape) == InputState.Press) Glfw.SetWindowShouldClose(window, true);
 
-				world.update();
+				ToolBox.world.update();
 		
 				Gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 				
-				world.render();
+				ToolBox.world.render();
 		
 				Glfw.SwapBuffers(window);
 			}
 			
-			world.Dispose();
+			ToolBox.world.Dispose();
 		}
 	}
 }
