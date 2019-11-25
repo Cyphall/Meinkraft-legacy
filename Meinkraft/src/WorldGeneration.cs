@@ -7,40 +7,44 @@ namespace Meinkraft
 {
 	public static class WorldGeneration
 	{
-		private static SimplexPerlin _noiseGen = new SimplexPerlin(new Random().Next(), NoiseQuality.Standard);
+//		private static SimplexPerlin _noiseGen = new SimplexPerlin(new Random().Next(), NoiseQuality.Standard);
+		private static SimplexPerlin _noiseGen = new SimplexPerlin(0, NoiseQuality.Standard);
 		
-		public static NativeArray<byte> generateChunkBlocks(ivec2 chunkPos, Func<ivec2, BiomeParams> biome)
+		public static NativeArray<byte> generateChunkBlocks(ivec3 chunkPos, Func<ivec3, BiomeParams> biome)
 		{
 			BiomeParams biomeParams = biome(chunkPos);
 			
-			NativeArray<byte> blocks = new NativeArray<byte>(65280, 0);
+			NativeArray<byte> blocks = new NativeArray<byte>(4096, BlockType.AIR);
 		
 			for (int x = 0; x < 16; x++)
 			{
 				for (int z = 0; z < 16; z++)
 				{
-					int targetY = biomeParams.minY + (int) (biomeParams.heightMap[x, z] * (biomeParams.maxY - biomeParams.minY));
-					targetY = Math.Min(targetY, 255);
-				
-					for (int y = 0; y < targetY; y++)
+					int surfaceHeight = biomeParams.minY + (int) (biomeParams.heightMap[x, z] * (biomeParams.maxY - biomeParams.minY));
+					int fullRockHeight = biomeParams.rockMin + (int) (biomeParams.fullRockHeightMap[x, z] * (biomeParams.rockMax - biomeParams.rockMin));
+
+					for (int y = 0; y < 16; y++)
 					{
-						if (targetY > biomeParams.rockMin + (biomeParams.rockMax - biomeParams.rockMin) * getRawNoise(chunkPos, new ivec2(x, z), 4) * 0.5f + 0.5f)
+						ivec3 blockWorldPos = MathUtils.getBlockWorldPos(chunkPos, new ivec3(x, y, z));
+						
+						if (surfaceHeight > fullRockHeight)
 						{
-							blocks[y + z * 255 + x * 4080] = BlockType.STONE;
+							if (blockWorldPos.y < surfaceHeight)
+								blocks[x + y*16 + z*256] = BlockType.STONE;
 						}
 						else
 						{
-							if (y < targetY - 4)
+							if (blockWorldPos.y < surfaceHeight - 4)
 							{
-								blocks[y + z * 255 + x * 4080] = BlockType.STONE;
+								blocks[x + y*16 + z*256] = BlockType.STONE;
 							}
-							else if (y < targetY - 1)
+							else if (blockWorldPos.y < surfaceHeight - 1)
 							{
-								blocks[y + z * 255 + x * 4080] = BlockType.DIRT;
+								blocks[x + y*16 + z*256] = BlockType.DIRT;
 							}
-							else
+							else if (blockWorldPos.y < surfaceHeight)
 							{
-								blocks[y + z * 255 + x * 4080] = BlockType.GRASS;
+								blocks[x + y*16 + z*256] = BlockType.GRASS;
 							}
 						}
 					}
@@ -50,11 +54,12 @@ namespace Meinkraft
 			return blocks;
 		}
 	
-		public static BiomeParams mountains(ivec2 chunkPos)
+		public static BiomeParams mountains(ivec3 chunkPos)
 		{
 			BiomeParams biomeParams = new BiomeParams
 			{
 				heightMap = new float[16, 16],
+				fullRockHeightMap = new float[16, 16],
 			
 				minY = 64,
 				maxY = 255,
@@ -63,11 +68,14 @@ namespace Meinkraft
 				rockMax = 180
 			};
 
+			ivec2 chunkPos2d = new ivec2(chunkPos.x, chunkPos.z);
+			
 			for (int x = 0; x<16; x++)
 			{
 				for (int y = 0; y<16; y++)
 				{
-					biomeParams.heightMap[x, y] = getNoise(chunkPos, new ivec2(x, y), 6, 12, persistance:0.4f);
+					biomeParams.heightMap[x, y] = getNoise(chunkPos2d, new ivec2(x, y), 6, 12, persistance:0.4f);
+					biomeParams.fullRockHeightMap[x, y] = getNoise(chunkPos2d, new ivec2(x, y), 1, 4);
 				}
 			}
 
@@ -110,6 +118,8 @@ namespace Meinkraft
 public struct BiomeParams
 {
 	public float[,] heightMap;
+	public float[,] fullRockHeightMap;
+	
 	public int minY;
 	public int maxY;
 	

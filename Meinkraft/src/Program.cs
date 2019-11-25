@@ -9,8 +9,6 @@ namespace Meinkraft
 	{
 		static void Main()
 		{
-			Thread.CurrentThread.Priority = ThreadPriority.Highest;
-			
 			Gl.Initialize();
 			Glfw.Init();
 			

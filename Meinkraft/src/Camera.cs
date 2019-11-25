@@ -33,7 +33,7 @@ namespace Meinkraft
 			_phi = vertical;
 			_theta = horizontal;
 
-			_phi = (_phi > 89) ? 89 : (_phi < -89) ? -89 : _phi;
+			_phi = (_phi > 89.9f) ? 89.9f : (_phi < -89f) ? -89.9f : _phi;
 
 			float phiRadian = glm.Radians(_phi);
 			float thetaRadian = glm.Radians(_theta);

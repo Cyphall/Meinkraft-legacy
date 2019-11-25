@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GLFW;
 using GlmSharp;
 
@@ -12,8 +10,7 @@ namespace Meinkraft
 	{
 		private readonly CameraManager _cameras = new CameraManager();
 		
-		public Dictionary<ivec2, Chunk> chunks { get; } = new Dictionary<ivec2, Chunk>();
-		private readonly BlockingCollection<Chunk> _applyQueue = new BlockingCollection<Chunk>(8);
+		public Dictionary<ivec3, Chunk> chunks { get; } = new Dictionary<ivec3, Chunk>();
 
 		public World(Window window)
 		{
@@ -27,17 +24,17 @@ namespace Meinkraft
 
 		public void Dispose()
 		{
-			foreach (KeyValuePair<ivec2, Chunk> keyValuePair in chunks)
+			foreach (Chunk chunk in chunks.Values)
 			{
-				keyValuePair.Value.Dispose();
+				chunk.Dispose();
 			}
 		}
 
-		private void createChunk(ivec2 chunkPos, bool overrideAlert = true)
+		private void createChunk(ivec3 chunkPos, bool showOverrideError = true)
 		{
 			if (chunks.ContainsKey(chunkPos))
 			{
-				if (overrideAlert)
+				if (showOverrideError)
 					Console.Error.WriteLine("A chunk has been overriden without prior deletion");
 				return;
 			}
@@ -46,16 +43,12 @@ namespace Meinkraft
 			
 			chunks.Add(chunkPos, chunk);
 			
-			ThreadPool.QueueUserWorkItem(_ =>
-			{
-				chunk.initialize();
-				_applyQueue.Add(chunk);
-			});
+			chunk.initialize();
 		}
 		
 		public void placeBlock(ivec3 blockPos, byte blockType)
 		{
-			ivec2 chunkPos = chunkPosFromBlockPos(blockPos);
+			ivec3 chunkPos = MathUtils.chunkPosFromBlockPos(blockPos);
 
 			if (!chunks.ContainsKey(chunkPos))
 			{
@@ -63,75 +56,48 @@ namespace Meinkraft
 				return;
 			}
 
-			chunks[chunkPos].placeBlock(localBlockPosFromBlockPos(blockPos), blockType);
+			chunks[chunkPos].placeBlock(MathUtils.localBlockPosFromBlockPos(blockPos), blockType);
 		}
 
-		private static ivec2 chunkPosFromBlockPos(ivec3 blockPos)
-		{
-			ivec2 chunkPos = ivec2.Zero;
-			
-			chunkPos.x = (int)glm.Floor(blockPos.x / 16.0f);
-			chunkPos.y = (int)glm.Floor(blockPos.z / 16.0f);
-
-			return chunkPos;
-		}
-
-		private static ivec3 localBlockPosFromBlockPos(ivec3 blockPos)
-		{
-			ivec3 localBlockPos = ivec3.Zero;
-
-			localBlockPos.x = MathUtils.mod(blockPos.x, 16);
-			localBlockPos.y = blockPos.y;
-			localBlockPos.z = MathUtils.mod(blockPos.z, 16);
-
-			return localBlockPos;
-		}
-	
-		private static ivec2 chunkPosFromPlayerPos(dvec3 playerPos)
-		{
-			ivec2 chunkPos = ivec2.Zero;
-
-			chunkPos.x = (int)glm.Floor(playerPos.x / 16.0f);
-			chunkPos.y = (int)glm.Floor(playerPos.z / 16.0f);
-
-			return chunkPos;
-		}
-		
 		public void update()
 		{
 			_cameras.current.update();
 
-			ivec2 chunkWithPlayer = chunkPosFromPlayerPos(_cameras.current.position);
+			ivec3 playerChunk = MathUtils.chunkPosFromPlayerPos(_cameras.current.position);
 
-			float effectiveRenderDistance = 8 - 0.1f;
+			float renderDistance = 8;
 			
-			KeyValuePair<ivec2, Chunk>[] chunkRemoveList = chunks.Where(pair => ivec2.Distance(pair.Key, chunkWithPlayer) > effectiveRenderDistance).ToArray();
+			KeyValuePair<ivec3, Chunk>[] chunkRemoveList = chunks.Where(pair => ivec3.Distance(pair.Key, playerChunk) > renderDistance).ToArray();
 		
-			foreach (KeyValuePair<ivec2, Chunk> keyValuePair in chunkRemoveList)
+			foreach (KeyValuePair<ivec3, Chunk> pair in chunkRemoveList)
 			{
-				chunks.Remove(keyValuePair.Key);
-				keyValuePair.Value.Dispose();
+				chunks.Remove(pair.Key);
+				pair.Value.destroyed = true;
+				if (pair.Value.initialized)
+					pair.Value.Dispose();
 			}
 			
-			for (int x = chunkWithPlayer.x ; x <= chunkWithPlayer.x + effectiveRenderDistance; x++)
+			for (int x = 0; x < renderDistance; x++)
 			{
-				for (int y = chunkWithPlayer.y ; y <= chunkWithPlayer.y + effectiveRenderDistance; y++)
+				for (int y = 0; y < renderDistance; y++)
 				{
-					if ((chunkWithPlayer.x - x) * (chunkWithPlayer.x - x) + (chunkWithPlayer.y - y) * (chunkWithPlayer.y - y) > effectiveRenderDistance * effectiveRenderDistance) continue;
-				
-					int xSym = chunkWithPlayer.x - (x - chunkWithPlayer.x);
-					int ySym = chunkWithPlayer.y - (y - chunkWithPlayer.y);
+					for (int z = 0; z < renderDistance; z++)
+					{
+						if (x*x + y*y + z*z > renderDistance * renderDistance) continue;
 
-					createChunk(new ivec2(x, y), false);
-					createChunk(new ivec2(x, ySym), false);
-					createChunk(new ivec2(xSym, y), false);
-					createChunk(new ivec2(xSym, ySym), false);
+						ivec3 normal = playerChunk + new ivec3(x, y, z);
+						ivec3 symetry = playerChunk - new ivec3(x, y, z);
+
+						createChunk(new ivec3(normal.x, normal.y, normal.z), false);
+						createChunk(new ivec3(normal.x, normal.y, symetry.z), false);
+						createChunk(new ivec3(normal.x, symetry.y, normal.z), false);
+						createChunk(new ivec3(normal.x, symetry.y, symetry.z), false);
+						createChunk(new ivec3(symetry.x, normal.y, normal.z), false);
+						createChunk(new ivec3(symetry.x, normal.y, symetry.z), false);
+						createChunk(new ivec3(symetry.x, symetry.y, normal.z), false);
+						createChunk(new ivec3(symetry.x, symetry.y, symetry.z), false);
+					}
 				}
-			}
-			
-			if (_applyQueue.TryTake(out Chunk chunk))
-			{
-				chunk.applyMesh();
 			}
 		}
 	}

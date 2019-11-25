@@ -47,7 +47,7 @@ namespace Meinkraft
 					Gl.Uniform1i(Gl.GetUniformLocation(_chunkShader.programID, "showNormals"), 1, _shaderShowNormals ? 1 : 0);
 					Gl.Uniform3f(Gl.GetUniformLocation(_chunkShader.programID, "cameraPos"), 1, position);
 					
-					foreach (KeyValuePair<ivec2, Chunk> keyValuePair in _world.chunks)
+					foreach (KeyValuePair<ivec3, Chunk> keyValuePair in _world.chunks)
 					{
 						keyValuePair.Value.render(vp, _chunkShader.programID);
 					}
