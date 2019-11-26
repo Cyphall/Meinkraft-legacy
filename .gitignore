@@ -2,8 +2,8 @@
 .vs/
 .idea
 
-Meinkraft/bin/Release/net461/*
-!Meinkraft/bin/Release/net461/resources
-!Meinkraft/bin/Release/net461/glfw.dll
+Meinkraft/bin/Release/netcoreapp2.1/*
+!Meinkraft/bin/Release/netcoreapp2.1/resources
+!Meinkraft/bin/Release/netcoreapp2.1/glfw.dll
 
 Meinkraft/obj/
