@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net461</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
         <Configurations>Release</Configurations>
         <Platforms>AnyCPU</Platforms>
         <NoWarn>NU1701</NoWarn>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>8</LangVersion>
-        <OutputType>Exe</OutputType>
     </PropertyGroup>
 
     <ItemGroup>

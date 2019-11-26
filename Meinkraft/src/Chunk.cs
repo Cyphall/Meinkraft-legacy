@@ -38,17 +38,17 @@ namespace Meinkraft
 
 			Gl.BindVertexArray(_vaoID);
 
-			Gl.BindBuffer(BufferTarget.ArrayBuffer, _verticesBufferID);
-			Gl.VertexAttribIPointer(0, 3, VertexAttribType.UnsignedByte, 0, IntPtr.Zero);
-			Gl.EnableVertexAttribArray(0);
+				Gl.BindBuffer(BufferTarget.ArrayBuffer, _verticesBufferID);
+					Gl.VertexAttribIPointer(0, 3, VertexAttribType.UnsignedByte, 0, IntPtr.Zero);
+					Gl.EnableVertexAttribArray(0);
 
-			Gl.BindBuffer(BufferTarget.ArrayBuffer, _uvsBufferID);
-			Gl.VertexAttribPointer(1, 2, VertexAttribType.HalfFloat, false, 0, IntPtr.Zero);
-			Gl.EnableVertexAttribArray(1);
+				Gl.BindBuffer(BufferTarget.ArrayBuffer, _uvsBufferID);
+					Gl.VertexAttribPointer(1, 2, VertexAttribType.HalfFloat, false, 0, IntPtr.Zero);
+					Gl.EnableVertexAttribArray(1);
 
-			Gl.BindBuffer(BufferTarget.ArrayBuffer, _normalsBufferID);
-			Gl.VertexAttribIPointer(2, 3, VertexAttribType.Byte, 0, IntPtr.Zero);
-			Gl.EnableVertexAttribArray(2);
+				Gl.BindBuffer(BufferTarget.ArrayBuffer, _normalsBufferID);
+					Gl.VertexAttribIPointer(2, 3, VertexAttribType.Byte, 0, IntPtr.Zero);
+					Gl.EnableVertexAttribArray(2);
 
 			Gl.BindVertexArray(0);
 		}
@@ -60,7 +60,7 @@ namespace Meinkraft
 			Gl.DeleteBuffers(_uvsBufferID);
 			Gl.DeleteBuffers(_normalsBufferID);
 			
-			_blocks.Dispose();
+			_blocks?.Dispose();
 		}
 
 		public void render(mat4 viewProjection, uint shaderID)

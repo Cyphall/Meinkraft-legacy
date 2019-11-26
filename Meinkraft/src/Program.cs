@@ -1,24 +1,28 @@
 ﻿using System;
-using System.Threading;
+using System.Runtime.InteropServices;
 using GLFW;
 using OpenGL;
 
 namespace Meinkraft
 {
-	class Program
+	internal class Program
 	{
-		static void Main()
+		public static void Main()
 		{
 			Gl.Initialize();
 			Glfw.Init();
 			
-			Glfw.SetErrorCallback((code, message) => Console.WriteLine(code));
+			Glfw.SetErrorCallback((code, message) => Console.WriteLine($"GLFW {code}: {Marshal.PtrToStringAnsi(message)}"));
 			
 			Glfw.WindowHint(Hint.Resizable, false);
 			Glfw.WindowHint(Hint.Visible, false);
+			Glfw.WindowHint(Hint.ContextVersionMajor, 4);
+			Glfw.WindowHint(Hint.ContextVersionMinor, 6);
 
 			VideoMode mode = Glfw.GetVideoMode(Glfw.PrimaryMonitor);
 			Window window = Glfw.CreateWindow(mode.Width, mode.Height, "Meinkraft", Glfw.PrimaryMonitor, Window.None);
+			
+			ToolBox.window = window;
 			
 			Glfw.MakeContextCurrent(window);
 			Glfw.SetInputMode(window, InputMode.Cursor, (int)CursorMode.Disabled);
@@ -49,6 +53,8 @@ namespace Meinkraft
 			}
 			
 			ToolBox.world.Dispose();
+			
+			Glfw.Terminate();
 		}
 	}
 }
