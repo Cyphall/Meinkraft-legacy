@@ -78,7 +78,8 @@ namespace Meinkraft
 
 			ToolBox.gl.BindVertexArray(_vaoID);
 				ToolBox.gl.DrawArrays(GL_TRIANGLES, 0, _verticesCount);
-			ToolBox.gl.BindVertexArray(0);
+//			This unbind is unnecessary
+//			ToolBox.gl.BindVertexArray(0);
 		}
 
 		public void initialize(OpenGL gl)

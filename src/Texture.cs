@@ -39,8 +39,8 @@ namespace Meinkraft
 
 			ToolBox.gl.BindTexture(GL_TEXTURE_2D, _textureID);
 
-			ToolBox.gl.TexParameterI(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, new[] {GL_NEAREST});
-			ToolBox.gl.TexParameterI(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, new[] {GL_NEAREST});
+			ToolBox.gl.TexParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			ToolBox.gl.TexParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 			ToolBox.gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.Width, image.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.Data);
 		}
