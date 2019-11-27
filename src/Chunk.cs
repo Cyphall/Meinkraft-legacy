@@ -70,6 +70,7 @@ namespace Meinkraft
 		public void render(mat4 viewProjection, uint shaderID)
 		{
 			if (!initialized) return;
+			if (_verticesCount == 0) return;
 
 			mat4 mvp = viewProjection * _model;
 
