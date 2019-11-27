@@ -1,4 +1,5 @@
 ﻿using GLFW;
+using SharpGL;
 
 namespace Meinkraft
 {
@@ -6,5 +7,6 @@ namespace Meinkraft
 	{
 		public static World world { get; set; }
 		public static Window window { get; set; }
+		public static OpenGL gl { get; set; }
 	}
 }

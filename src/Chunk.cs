@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using GlmSharp;
-using OpenGL;
+using SharpGL;
+using static SharpGL.OpenGL;
 
 namespace Meinkraft
 {
@@ -30,35 +32,37 @@ namespace Meinkraft
 			_model[3, 1] = _pos.y * 16;
 			_model[3, 2] = _pos.z * 16;
 
-			_verticesBufferID = Gl.GenBuffer();
-			_uvsBufferID = Gl.GenBuffer();
-			_normalsBufferID = Gl.GenBuffer();
+			uint[] buffers = new uint[3];
+			ToolBox.gl.GenBuffers(3, buffers);
+			_verticesBufferID = buffers[0];
+			_uvsBufferID = buffers[1];
+			_normalsBufferID = buffers[2];
 
-			_vaoID = Gl.GenVertexArray();
+			uint[] array = new uint[1];
+			ToolBox.gl.GenVertexArrays(1, array);
+			_vaoID = array[0];
 
-			Gl.BindVertexArray(_vaoID);
+			ToolBox.gl.BindVertexArray(_vaoID);
 
-				Gl.BindBuffer(BufferTarget.ArrayBuffer, _verticesBufferID);
-					Gl.VertexAttribIPointer(0, 3, VertexAttribType.UnsignedByte, 0, IntPtr.Zero);
-					Gl.EnableVertexAttribArray(0);
+				ToolBox.gl.BindBuffer(GL_ARRAY_BUFFER, _verticesBufferID);
+					ToolBox.gl.VertexAttribIPointer(0, 3, GL_UNSIGNED_BYTE, 0, IntPtr.Zero);
+					ToolBox.gl.EnableVertexAttribArray(0);
 
-				Gl.BindBuffer(BufferTarget.ArrayBuffer, _uvsBufferID);
-					Gl.VertexAttribPointer(1, 2, VertexAttribType.HalfFloat, false, 0, IntPtr.Zero);
-					Gl.EnableVertexAttribArray(1);
+				ToolBox.gl.BindBuffer(GL_ARRAY_BUFFER, _uvsBufferID);
+					ToolBox.gl.VertexAttribPointer(1, 2, 5131, false, 0, IntPtr.Zero);
+					ToolBox.gl.EnableVertexAttribArray(1);
 
-				Gl.BindBuffer(BufferTarget.ArrayBuffer, _normalsBufferID);
-					Gl.VertexAttribIPointer(2, 3, VertexAttribType.Byte, 0, IntPtr.Zero);
-					Gl.EnableVertexAttribArray(2);
+				ToolBox.gl.BindBuffer(GL_ARRAY_BUFFER, _normalsBufferID);
+					ToolBox.gl.VertexAttribIPointer(2, 3, GL_BYTE, 0, IntPtr.Zero);
+					ToolBox.gl.EnableVertexAttribArray(2);
 
-			Gl.BindVertexArray(0);
+			ToolBox.gl.BindVertexArray(0);
 		}
 
 		public void Dispose()
 		{
-			Gl.DeleteVertexArrays(_vaoID);
-			Gl.DeleteBuffers(_verticesBufferID);
-			Gl.DeleteBuffers(_uvsBufferID);
-			Gl.DeleteBuffers(_normalsBufferID);
+			ToolBox.gl.DeleteVertexArrays(1, new[]{_vaoID});
+			ToolBox.gl.DeleteBuffers(3, new[]{_verticesBufferID, _uvsBufferID, _normalsBufferID});
 			
 			_blocks?.Dispose();
 		}
@@ -69,18 +73,18 @@ namespace Meinkraft
 
 			mat4 mvp = viewProjection * _model;
 
-			Gl.UniformMatrix4f(Gl.GetUniformLocation(shaderID, "modelViewProjection"), 1, false, mvp);
+			ToolBox.gl.UniformMatrix4(3, 1, false, mvp.ToArray());
 
-			Gl.BindVertexArray(_vaoID);
-				Gl.DrawArrays(PrimitiveType.Triangles, 0, _verticesCount);
-			Gl.BindVertexArray(0);
+			ToolBox.gl.BindVertexArray(_vaoID);
+				ToolBox.gl.DrawArrays(GL_TRIANGLES, 0, _verticesCount);
+			ToolBox.gl.BindVertexArray(0);
 		}
 
-		public void initialize()
+		public void initialize(OpenGL gl)
 		{
 			_blocks = WorldGeneration.generateChunkBlocks(_pos, WorldGeneration.mountains);
 
-			rebuildMesh();
+			rebuildMesh(gl);
 			
 			if (destroyed)
 				Dispose();
@@ -93,7 +97,7 @@ namespace Meinkraft
 			return _blocks[x + y * 16 + z * 256];
 		}
 
-		private void rebuildMesh()
+		private void rebuildMesh(OpenGL gl)
 		{
 			NativeList<byte> vertices = new NativeList<byte>(); // byte3
 			NativeList<Half> uvs = new NativeList<Half>(); // float2
@@ -108,9 +112,9 @@ namespace Meinkraft
 					for (byte x = 0; x < 16; x++)
 					{
 						if (getBlock(x, y, z) == BlockType.AIR) continue;
-
+						
 						vec2 uvOffset = BlockType.get(getBlock(x, y, z)).uvOffset;
-
+						
 						// x + 1
 						if ((x + 1 < 16 && getBlock(x+1, y, z) == BlockType.AIR) || x + 1 == 16)
 						{
@@ -270,16 +274,18 @@ namespace Meinkraft
 				}
 			}
 			
-			Gl.BindBuffer(BufferTarget.ArrayBuffer, _verticesBufferID);
-				Gl.BufferData(BufferTarget.ArrayBuffer, vertices.size, vertices, BufferUsage.DynamicDraw);
+			gl.BindBuffer(GL_ARRAY_BUFFER, _verticesBufferID);
+				gl.BufferData(GL_ARRAY_BUFFER, (int)(vertices.size), vertices, GL_DYNAMIC_DRAW);
 
-			Gl.BindBuffer(BufferTarget.ArrayBuffer, _uvsBufferID);
-				Gl.BufferData(BufferTarget.ArrayBuffer, uvs.size * 2, uvs, BufferUsage.DynamicDraw);
+			gl.BindBuffer(GL_ARRAY_BUFFER, _uvsBufferID);
+				gl.BufferData(GL_ARRAY_BUFFER, (int)(uvs.size * 2), uvs, GL_DYNAMIC_DRAW);
 
-			Gl.BindBuffer(BufferTarget.ArrayBuffer, _normalsBufferID);
-				Gl.BufferData(BufferTarget.ArrayBuffer, normals.size, normals, BufferUsage.DynamicDraw);
+			gl.BindBuffer(GL_ARRAY_BUFFER, _normalsBufferID);
+				gl.BufferData(GL_ARRAY_BUFFER, (int)(normals.size), normals, GL_DYNAMIC_DRAW);
 
-			Gl.BindBuffer(BufferTarget.ArrayBuffer, 0);
+			gl.BindBuffer(GL_ARRAY_BUFFER, 0);
+			
+			gl.Finish();
 			
 			vertices.Dispose();
 			uvs.Dispose();
@@ -301,7 +307,7 @@ namespace Meinkraft
 		{
 			setBlock(blockPos, blockType);
 
-			rebuildMesh();
+			rebuildMesh(ToolBox.gl);
 		}
 	}
 }

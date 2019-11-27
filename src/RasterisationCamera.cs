@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using GLFW;
 using GlmSharp;
-using OpenGL;
-using ErrorCode = OpenGL.ErrorCode;
+using static SharpGL.OpenGL;
 
 namespace Meinkraft
 {
@@ -44,8 +44,7 @@ namespace Meinkraft
 			{
 				if (_chunkTexture.bind())
 				{
-					Gl.Uniform1i(Gl.GetUniformLocation(_chunkShader.programID, "showNormals"), 1, _shaderShowNormals ? 1 : 0);
-					Gl.Uniform3f(Gl.GetUniformLocation(_chunkShader.programID, "cameraPos"), 1, position);
+					ToolBox.gl.Uniform1(4, 1, new[]{_shaderShowNormals ? 1 : 0});
 					
 					foreach (KeyValuePair<ivec3, Chunk> keyValuePair in _world.chunks)
 					{
@@ -56,8 +55,8 @@ namespace Meinkraft
 			}
 			_chunkShader.unbind();
 			
-			ErrorCode err;
-			while((err = Gl.GetError()) != ErrorCode.NoError)
+			uint err;
+			while((err = ToolBox.gl.GetError()) != GL_NO_ERROR)
 			{
 				Console.Error.WriteLine(err);
 			}

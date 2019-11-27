@@ -1,18 +1,18 @@
 ﻿using System;
 using System.IO;
-using OpenGL;
 using StbImageSharp;
+using static SharpGL.OpenGL;
 
 namespace Meinkraft
 {
 	public class Texture : IDisposable
 	{
 		uint _textureID;
-		
+
 		public Texture(string name)
 		{
-			ImageResult image = null;
-			
+			ImageResult image;
+
 			try
 			{
 				using (Stream stream = File.OpenRead($"resources/textures/{name}.png"))
@@ -25,39 +25,41 @@ namespace Meinkraft
 				Console.Error.WriteLine(e);
 				return;
 			}
-			
-			_textureID = Gl.GenTexture();
-			
+
+			uint[] temp = new uint[1];
+			ToolBox.gl.GenTextures(1, temp);
+			_textureID = temp[0];
+
 			if (_textureID == 0)
 			{
-				ErrorCode code = Gl.GetError();
+				uint code = ToolBox.gl.GetError();
 				Console.Error.WriteLine($"Error while creating texture for {name}: {code}");
 				return;
 			}
 
-			Gl.BindTexture(TextureTarget.Texture2d, _textureID);
-				
-			Gl.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, Gl.NEAREST);
-			Gl.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, Gl.NEAREST);
-				
-			Gl.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
+			ToolBox.gl.BindTexture(GL_TEXTURE_2D, _textureID);
+
+			ToolBox.gl.TexParameterI(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, new[] {GL_NEAREST});
+			ToolBox.gl.TexParameterI(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, new[] {GL_NEAREST});
+
+			ToolBox.gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.Width, image.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.Data);
 		}
-		
+
 		public void Dispose()
 		{
-			Gl.DeleteTextures(_textureID);
+			ToolBox.gl.DeleteTextures(1, new[] {_textureID});
 		}
 
 		public bool bind()
 		{
 			if (_textureID == 0) return false;
-			Gl.BindTexture(TextureTarget.Texture2d, _textureID);
+			ToolBox.gl.BindTexture(GL_TEXTURE_2D, _textureID);
 			return true;
 		}
 
 		public void unbind()
 		{
-			Gl.BindTexture(TextureTarget.Texture2d, 0);
+			ToolBox.gl.BindTexture(GL_TEXTURE_2D, 0);
 		}
 	}
 }

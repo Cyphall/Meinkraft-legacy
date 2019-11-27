@@ -9,6 +9,7 @@ namespace Meinkraft
 	public class World : IDisposable
 	{
 		private readonly CameraManager _cameras = new CameraManager();
+		private ChunkGenerator _chunkGenerator = new ChunkGenerator();
 		
 		public Dictionary<ivec3, Chunk> chunks { get; } = new Dictionary<ivec3, Chunk>();
 
@@ -28,6 +29,8 @@ namespace Meinkraft
 			{
 				chunk.Dispose();
 			}
+
+			_chunkGenerator.Dispose();
 		}
 
 		private void createChunk(ivec3 chunkPos, bool showOverrideError = true)
@@ -43,7 +46,7 @@ namespace Meinkraft
 			
 			chunks.Add(chunkPos, chunk);
 			
-			chunk.initialize();
+			_chunkGenerator.enqueue(chunk);
 		}
 		
 		public void placeBlock(ivec3 blockPos, byte blockType)
@@ -65,7 +68,7 @@ namespace Meinkraft
 
 			ivec3 playerChunk = MathUtils.chunkPosFromPlayerPos(_cameras.current.position);
 
-			float renderDistance = 8;
+			float renderDistance = 16;
 			
 			KeyValuePair<ivec3, Chunk>[] chunkRemoveList = chunks.Where(pair => ivec3.Distance(pair.Key, playerChunk) > renderDistance).ToArray();
 		

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using GLFW;
-using OpenGL;
+using SharpGL;
 
 namespace Meinkraft
 {
@@ -9,7 +9,7 @@ namespace Meinkraft
 	{
 		public static void Main()
 		{
-			Gl.Initialize();
+			ToolBox.gl = new OpenGL();
 			Glfw.Init();
 			
 			Glfw.SetErrorCallback((code, message) => Console.WriteLine($"GLFW {code}: {Marshal.PtrToStringAnsi(message)}"));
@@ -28,12 +28,12 @@ namespace Meinkraft
 			Glfw.SetInputMode(window, InputMode.Cursor, (int)CursorMode.Disabled);
 			
 			
-			Gl.Enable(EnableCap.DepthTest);
+			ToolBox.gl.Enable(OpenGL.GL_DEPTH_TEST);
 			
-			Gl.Enable(EnableCap.CullFace);
-			Gl.FrontFace(FrontFaceDirection.Cw);
+			ToolBox.gl.Enable(OpenGL.GL_CULL_FACE);
+			ToolBox.gl.FrontFace(OpenGL.GL_CW);
 			
-			Gl.ClearColor(0x87 / 255.0f, 0xCE / 255.0f, 0xFA / 255.0f, 0xFF / 255.0f);
+			ToolBox.gl.ClearColor(0x87 / 255.0f, 0xCE / 255.0f, 0xFA / 255.0f, 0xFF / 255.0f);
 			
 			ToolBox.world = new World(window);
 			
@@ -45,7 +45,7 @@ namespace Meinkraft
 
 				ToolBox.world.update();
 		
-				Gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+				ToolBox.gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
 				
 				ToolBox.world.render();
 		

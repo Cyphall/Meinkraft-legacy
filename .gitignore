@@ -1,9 +1,10 @@
 .vscode
-.vs/
+.vs
 .idea
 
-Meinkraft/bin/Release/netcoreapp2.1/*
-!Meinkraft/bin/Release/netcoreapp2.1/resources
-!Meinkraft/bin/Release/netcoreapp2.1/glfw.dll
+bin/Release/*
+!bin/Release/resources
+!bin/Release/glfw.dll
 
-Meinkraft/obj/
+obj/
+packages/

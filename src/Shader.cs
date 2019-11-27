@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using OpenGL;
+using static SharpGL.OpenGL;
 
 namespace Meinkraft
 {
@@ -30,40 +30,41 @@ namespace Meinkraft
 			freeMemory();
 		}
 
-		private static bool compileShader(out uint shaderID, ShaderType type, string path)
+		private static bool compileShader(out uint shaderID, uint type, string path)
 		{
-			shaderID = Gl.CreateShader(type);
+			shaderID = ToolBox.gl.CreateShader(type);
 
 			if (shaderID == 0)
 			{
-				ErrorCode code = Gl.GetError();
+				uint code = ToolBox.gl.GetError();
 				Console.Error.WriteLine($"Error while creating shader for {path}: {code}");
 				return false;
 			}
 			
-			string[] source = new []{""};
+			string source = "";
 
 			try
 			{
-				source[0] = File.ReadAllText(path);
+				source = File.ReadAllText(path);
 			}
 			catch (IOException e)
 			{
 				Console.Error.WriteLine(e);
 			}
 
-			Gl.ShaderSource(shaderID, source);
-			Gl.CompileShader(shaderID);
+			ToolBox.gl.ShaderSource(shaderID, source);
+			ToolBox.gl.CompileShader(shaderID);
 			
+			int[] compileSuccess = new int[1];
+			ToolBox.gl.GetShader(shaderID, GL_COMPILE_STATUS, compileSuccess);
 			
-			Gl.GetShader(shaderID, ShaderParameterName.CompileStatus, out int compileSuccess);
-			
-			if(compileSuccess == Gl.FALSE)
+			if(compileSuccess[0] == GL_FALSE)
 			{
-				Gl.GetShader(shaderID, ShaderParameterName.InfoLogLength, out int length);
+				int[] length = new int[1];
+				ToolBox.gl.GetShader(shaderID, GL_INFO_LOG_LENGTH, length);
 		
-				StringBuilder error = new StringBuilder(length);
-				Gl.GetShaderInfoLog(shaderID, length, out _, error);
+				StringBuilder error = new StringBuilder(length[0]);
+				ToolBox.gl.GetShaderInfoLog(shaderID, length[0], IntPtr.Zero, error);
 		
 				Console.Error.WriteLine($"Error while compiling shader {path}: {error}");
 				
@@ -79,36 +80,38 @@ namespace Meinkraft
 			vertexID = 0;
 			fragmentID = 0;
 			
-			if (!compileShader(out vertexID, ShaderType.VertexShader, vertexPath))
+			if (!compileShader(out vertexID, GL_VERTEX_SHADER, vertexPath))
 				return false;
 	
 	
-			if(!compileShader(out fragmentID, ShaderType.FragmentShader, fragmentPath))
+			if(!compileShader(out fragmentID, GL_FRAGMENT_SHADER, fragmentPath))
 				return false;
 	
 	
-			programID = Gl.CreateProgram();
+			programID = ToolBox.gl.CreateProgram();
 			if (programID == 0)
 			{
-				ErrorCode code = Gl.GetError();
+				uint code = ToolBox.gl.GetError();
 				Console.Error.WriteLine($"Error while creating program for ({vertexPath}, {fragmentPath}): {code}");
 				return false;
 			}
 			
-			Gl.AttachShader(programID, vertexID);
-			Gl.AttachShader(programID, fragmentID);
+			ToolBox.gl.AttachShader(programID, vertexID);
+			ToolBox.gl.AttachShader(programID, fragmentID);
 	
-			Gl.LinkProgram(programID);
+			ToolBox.gl.LinkProgram(programID);
 			
 			
-			Gl.GetProgram(programID, ProgramProperty.LinkStatus, out int linkSuccess);
+			int[] linkSuccess = new int[1];
+			ToolBox.gl.GetProgram(programID, GL_LINK_STATUS, linkSuccess);
 			
-			if(linkSuccess == Gl.FALSE)
+			if(linkSuccess[0] == GL_FALSE)
 			{
-				Gl.GetProgram(programID, ProgramProperty.InfoLogLength, out int length);
+				int[] length = new int[1];
+				ToolBox.gl.GetProgram(programID, GL_INFO_LOG_LENGTH, length);
 		
-				StringBuilder error = new StringBuilder(length);
-				Gl.GetProgramInfoLog(programID, length, out _, error);
+				StringBuilder error = new StringBuilder(length[0]);
+				ToolBox.gl.GetProgramInfoLog(programID, length[0], IntPtr.Zero, error);
 		
 				Console.Error.WriteLine($"Error while linking shaders ({vertexPath}, {fragmentPath}) to program: {error}");
 				
@@ -120,9 +123,8 @@ namespace Meinkraft
 
 		private void freeMemory()
 		{
-			Gl.DeleteBuffers(_vertexID);
-			Gl.DeleteBuffers(_fragmentID);
-			Gl.DeleteProgram(_programID);
+			ToolBox.gl.DeleteBuffers(2, new []{_vertexID, _fragmentID});
+			ToolBox.gl.DeleteProgram(_programID);
 
 			_vertexID = 0;
 			_fragmentID = 0;
@@ -132,13 +134,13 @@ namespace Meinkraft
 		public bool bind()
 		{
 			if (_programID == 0) return false;
-			Gl.UseProgram(_programID);
+			ToolBox.gl.UseProgram(_programID);
 			return true;
 		}
 
 		public void unbind()
 		{
-			Gl.UseProgram(0);
+			ToolBox.gl.UseProgram(0);
 		}
 	}
 }

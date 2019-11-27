@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 in vec2 frag_UV;
 flat in ivec3 frag_Normals;
