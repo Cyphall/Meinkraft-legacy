@@ -7,8 +7,8 @@ namespace Meinkraft
 {
 	public static class WorldGeneration
 	{
-//		private static SimplexPerlin _noiseGen = new SimplexPerlin(new Random().Next(), NoiseQuality.Standard);
-		private static SimplexPerlin _noiseGen = new SimplexPerlin(0, NoiseQuality.Standard);
+		private static SimplexPerlin _noiseGen = new SimplexPerlin(new Random().Next(), NoiseQuality.Standard);
+//		private static SimplexPerlin _noiseGen = new SimplexPerlin(0, NoiseQuality.Standard);
 		
 		public static NativeArray<byte> generateChunkBlocks(ivec3 chunkPos, Func<ivec3, BiomeParams> biome)
 		{

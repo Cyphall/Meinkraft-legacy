@@ -64,10 +64,10 @@ namespace Meinkraft
 			ToolBox.gl.DeleteVertexArrays(1, new[]{_vaoID});
 			ToolBox.gl.DeleteBuffers(3, new[]{_verticesBufferID, _uvsBufferID, _normalsBufferID});
 			
-			_blocks?.Dispose();
+			_blocks.Dispose();
 		}
 
-		public void render(mat4 viewProjection, uint shaderID)
+		public void render(mat4 viewProjection)
 		{
 			if (!initialized) return;
 			if (_verticesCount == 0) return;

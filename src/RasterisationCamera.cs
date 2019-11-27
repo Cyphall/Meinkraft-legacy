@@ -48,7 +48,7 @@ namespace Meinkraft
 					
 					foreach (KeyValuePair<ivec3, Chunk> keyValuePair in _world.chunks)
 					{
-						keyValuePair.Value.render(vp, _chunkShader.programID);
+						keyValuePair.Value.render(vp);
 					}
 				}
 				_chunkTexture.unbind();

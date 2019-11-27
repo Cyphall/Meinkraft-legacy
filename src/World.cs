@@ -27,7 +27,9 @@ namespace Meinkraft
 		{
 			foreach (Chunk chunk in chunks.Values)
 			{
-				chunk.Dispose();
+				chunk.destroyed = true;
+				if (chunk.initialized)
+					chunk.Dispose();
 			}
 
 			_chunkGenerator.Dispose();
