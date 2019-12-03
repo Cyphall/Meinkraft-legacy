@@ -9,9 +9,11 @@ namespace Meinkraft
 	public class World : IDisposable
 	{
 		private readonly CameraManager _cameras = new CameraManager();
-		private ChunkGenerator _chunkGenerator = new ChunkGenerator();
-		
+		private readonly ChunkGenerator _chunkGenerator = new ChunkGenerator();
+
 		public Dictionary<ivec3, Chunk> chunks { get; } = new Dictionary<ivec3, Chunk>();
+
+		private readonly List<ivec3> _chunksToCreate = new List<ivec3>(106);
 
 		public World(Window window)
 		{
@@ -43,14 +45,14 @@ namespace Meinkraft
 					Console.Error.WriteLine("A chunk has been overriden without prior deletion");
 				return;
 			}
-			
+
 			Chunk chunk = new Chunk(chunkPos);
-			
+
 			chunks.Add(chunkPos, chunk);
-			
+
 			_chunkGenerator.enqueue(chunk);
 		}
-		
+
 		public void placeBlock(ivec3 blockPos, byte blockType)
 		{
 			ivec3 chunkPos = MathUtils.chunkPosFromBlockPos(blockPos);
@@ -69,41 +71,59 @@ namespace Meinkraft
 			_cameras.current.update();
 
 			ivec3 playerChunk = MathUtils.chunkPosFromPlayerPos(_cameras.current.position);
-
 			float renderDistance = 16;
 			
-			KeyValuePair<ivec3, Chunk>[] chunkRemoveList = chunks.Where(pair => ivec3.Distance(pair.Key, playerChunk) > renderDistance).ToArray();
-		
-			foreach (KeyValuePair<ivec3, Chunk> pair in chunkRemoveList)
+			
+			// Deleting chunks out of the render distance
+			List<ivec3> chunksToRemove = chunks.Keys.Where(chunkPos => ivec3.Distance(chunkPos, playerChunk) > renderDistance + 0.1f).ToList();
+
+			foreach (ivec3 chunkPos in chunksToRemove)
 			{
-				chunks.Remove(pair.Key);
-				pair.Value.destroyed = true;
-				if (pair.Value.initialized)
-					pair.Value.Dispose();
+				Chunk chunk = chunks[chunkPos];
+				chunks.Remove(chunkPos);
+				chunk.destroyed = true;
+				if (chunk.initialized)
+					chunk.Dispose();
 			}
 			
-			for (int x = 0; x < renderDistance; x++)
+
+			// Creating missing chunks that are within render distance
+			if (chunks.Count == 0)
+				_chunksToCreate.Add(playerChunk);
+
+			foreach (KeyValuePair<ivec3, Chunk> pair in chunks)
 			{
-				for (int y = 0; y < renderDistance; y++)
-				{
-					for (int z = 0; z < renderDistance; z++)
-					{
-						if (x*x + y*y + z*z > renderDistance * renderDistance) continue;
+				ivec3 xpos = pair.Key + new ivec3(1, 0, 0);
+				if (!_chunksToCreate.Contains(xpos) && !chunks.ContainsKey(xpos) && ivec3.Distance(xpos, playerChunk) < renderDistance)
+					_chunksToCreate.Add(xpos);
 
-						ivec3 normal = playerChunk + new ivec3(x, y, z);
-						ivec3 symetry = playerChunk - new ivec3(x, y, z);
+				ivec3 xneg = pair.Key + new ivec3(-1, 0, 0);
+				if (!_chunksToCreate.Contains(xneg) && !chunks.ContainsKey(xneg) && ivec3.Distance(xneg, playerChunk) < renderDistance)
+					_chunksToCreate.Add(xneg);
+				
+				ivec3 ypos = pair.Key + new ivec3(0, 1, 0);
+				if (!_chunksToCreate.Contains(ypos) && !chunks.ContainsKey(ypos) && ivec3.Distance(ypos, playerChunk) < renderDistance)
+					_chunksToCreate.Add(ypos);
+				
+				ivec3 yneg = pair.Key + new ivec3(0, -1, 0);
+				if (!_chunksToCreate.Contains(yneg) && !chunks.ContainsKey(yneg) && ivec3.Distance(yneg, playerChunk) < renderDistance)
+					_chunksToCreate.Add(yneg);
+				
+				ivec3 zpos = pair.Key + new ivec3(0, 0, 1);
+				if (!_chunksToCreate.Contains(zpos) && !chunks.ContainsKey(zpos) && ivec3.Distance(zpos, playerChunk) < renderDistance)
+					_chunksToCreate.Add(zpos);
+				
+				ivec3 zneg = pair.Key + new ivec3(0, 0, -1);
+				if (!_chunksToCreate.Contains(zneg) && !chunks.ContainsKey(zneg) && ivec3.Distance(zneg, playerChunk) < renderDistance)
+					_chunksToCreate.Add(zneg);
 
-						createChunk(new ivec3(normal.x, normal.y, normal.z), false);
-						createChunk(new ivec3(normal.x, normal.y, symetry.z), false);
-						createChunk(new ivec3(normal.x, symetry.y, normal.z), false);
-						createChunk(new ivec3(normal.x, symetry.y, symetry.z), false);
-						createChunk(new ivec3(symetry.x, normal.y, normal.z), false);
-						createChunk(new ivec3(symetry.x, normal.y, symetry.z), false);
-						createChunk(new ivec3(symetry.x, symetry.y, normal.z), false);
-						createChunk(new ivec3(symetry.x, symetry.y, symetry.z), false);
-					}
-				}
+				// Limit: 100 new chunks per frame
+				if (_chunksToCreate.Count > 100) break;
 			}
+			
+			_chunksToCreate.ForEach(c => createChunk(c));
+			
+			_chunksToCreate.Clear();
 		}
 	}
 }
