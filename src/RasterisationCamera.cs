@@ -14,9 +14,9 @@ namespace Meinkraft
 
 		private readonly Shader _chunkShader;
 		private readonly Texture _chunkTexture;
-		
-		private bool _shaderShowNormals = false;
-		
+
+		private const bool SHADER_SHOW_NORMALS = false;
+
 		private readonly World _world;
 		
 		public RasterisationCamera(Window window, World world) : base(window)
@@ -44,14 +44,14 @@ namespace Meinkraft
 			{
 				if (_chunkTexture.bind())
 				{
-					ToolBox.gl.Uniform1(4, 1, new[]{_shaderShowNormals ? 1 : 0});
+					ToolBox.gl.Uniform1(4, 1, new[]{SHADER_SHOW_NORMALS ? 1 : 0});
 					
 					foreach (KeyValuePair<ivec3, Chunk> keyValuePair in _world.chunks)
 					{
 						keyValuePair.Value.render(vp);
 					}
 				}
-				_chunkTexture.unbind();
+				Texture.unbind();
 			}
 			_chunkShader.unbind();
 			

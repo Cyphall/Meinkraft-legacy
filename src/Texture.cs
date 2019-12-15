@@ -57,7 +57,7 @@ namespace Meinkraft
 			return true;
 		}
 
-		public void unbind()
+		public static void unbind()
 		{
 			ToolBox.gl.BindTexture(GL_TEXTURE_2D, 0);
 		}

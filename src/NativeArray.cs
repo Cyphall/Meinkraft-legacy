@@ -5,7 +5,7 @@ namespace Meinkraft
 {
 	public unsafe class NativeArray<T> : IDisposable where T : unmanaged
 	{
-		private T* _array;
+		private readonly T* _array;
 		public uint size { get; }
 		
 		public NativeArray(uint size, T defaultValue)
