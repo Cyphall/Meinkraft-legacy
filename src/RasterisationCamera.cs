@@ -44,12 +44,7 @@ namespace Meinkraft
 			{
 				if (_chunkTexture.bind())
 				{
-					ToolBox.gl.Uniform1(4, 1, new[]{SHADER_SHOW_NORMALS ? 1 : 0});
 					
-					foreach (KeyValuePair<ivec3, Chunk> keyValuePair in _world.chunks)
-					{
-						keyValuePair.Value.render(vp);
-					}
 				}
 				Texture.unbind();
 			}

@@ -53,7 +53,7 @@ namespace Meinkraft
 			_chunkGenerator.enqueue(chunk);
 		}
 
-		public void placeBlock(ivec3 blockPos, byte blockType)
+		public void setBlock(ivec3 blockPos, byte blockType)
 		{
 			ivec3 chunkPos = MathUtils.chunkPosFromBlockPos(blockPos);
 
@@ -63,7 +63,7 @@ namespace Meinkraft
 				return;
 			}
 
-			chunks[chunkPos].placeBlock(MathUtils.localBlockPosFromBlockPos(blockPos), blockType);
+			chunks[chunkPos].setBlock(MathUtils.localBlockPosFromBlockPos(blockPos), blockType);
 		}
 
 		public void update()
